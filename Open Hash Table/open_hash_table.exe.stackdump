@@ -1,9 +1,11 @@
-Exception: STATUS_ACCESS_VIOLATION at eip=00401850
-eax=00000000 ebx=0023CC58 ecx=00000005 edx=00000005 esi=FFFFFFFF edi=611D8DB2
-ebp=0023CC78 esp=0023CB40 program=D:\GitProjects\C-informatics\Open Hash Table\dist\Debug\Cygwin-Windows\open_hash_table.exe, pid 5740, thread main
+Exception: STATUS_ACCESS_VIOLATION at eip=0040121C
+eax=00000000 ebx=20014E58 ecx=20014E58 edx=20014E58 esi=FFFFFFFF edi=611D8DB2
+ebp=0023CB08 esp=0023CAE0 program=D:\GitProjects\C-informatics\Open Hash Table\dist\Debug\Cygwin-Windows\open_hash_table.exe, pid 2612, thread main
 cs=001B ds=0023 es=0023 fs=003B gs=0000 ss=0023
 Stack trace:
 Frame     Function  Args
-0023CC78  00401850 (00000001, 0023CC9C, 20010108, 61007B2A)
+0023CB08  0040121C (0023CB20, 00000001, 00000001, 610061D9)
+0023CB38  004016F0 (0023CB64, 00000001, 00000001, 611BFE20)
+0023CC78  00401A03 (00000001, 0023CC9C, 20010108, 61007B2A)
 0023CD18  61007B8F (00000000, 0023CD74, 61006BC0, 00000000)
 End of stack trace

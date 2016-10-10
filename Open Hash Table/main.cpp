@@ -34,7 +34,7 @@ struct List // Структура данных "Двусвязный списо�
     // Указатели на адреса начала и конца списка
 };
 
-void add( List *list, struct Couple couple) // Добавление пары ключ-значение
+void add( List *list, Couple couple) // Добавление пары ключ-значение
 {
     Node *temp = new Node; // Выделение памяти под новый элемент списка
     temp->couple = couple; // Присваиваем добавляемому элементу значение
@@ -51,7 +51,7 @@ void add( List *list, struct Couple couple) // Добавление пары к�
     }
 }
 
-void add( Node * table, int hash) // Добавление хеша (перегрузка функции) 
+void add( Node * table, int hash) // Добавление хеша в массив (столбец) хешей (перегрузка функции) 
 {    
     int i = 0;
     while (table[i].hash != -1)
@@ -61,12 +61,11 @@ void add( Node * table, int hash) // Добавление хеша (перегр
         table[i-1].next = &table[i];
     // Жертвуем указателем prev в столбце хешей для указания на ветку (строку)
 }
-//void pop( List *list, struct Couple couple, struct Couple *pos = NULL )
 
 void print_list( List * list ) // Печать списка
 {
     Node * temp = list->head;  // Временно указываем на адрес первого элемента
-    cout<<"Список:"<<endl;
+    cout<<"List:"<<endl;
     while( temp != NULL )      // Пока не дойдем до конца списка
     {
         cout << "(" << (temp->couple).key << "," <<(temp->couple).value <<") "; // Выводим элемент
@@ -79,7 +78,7 @@ void print_table( Node * table ) // Печать хеш-таблицы (стол
 {
     Node * temp_table = table;
     Node * temp_brunch; // Указатель на начало ветки (строчки) с элементами
-    cout<<"Хеш-таблица:"<<endl;
+    cout<<"Hash table:"<<endl;
     while( temp_table != NULL )
     {
         cout<<temp_table->hash<<": ";
@@ -125,7 +124,19 @@ struct Node * find_first( List *list, int key) // Поиск по ключу с 
     return temp;
 }
 
-struct Node * find_by_hash( Node * table, int key) // Поиск по хешу
+struct Node * find_last( List *list, int key) // Поиск по ключу с конца списка
+{
+    Node * temp = list->tail;
+    while ( temp != NULL )
+    {  
+        if (temp->couple.key == key)
+                break;
+        temp = temp->prev;
+    }
+    return temp;
+}
+
+struct Node * find_by_hash( Node * table, int key ) // Поиск в хеш-таблице
 {
     Node * hash_ptr = table;
     List brunch;
@@ -133,19 +144,61 @@ struct Node * find_by_hash( Node * table, int key) // Поиск по хешу
     hash = hash_function(key);
     hash_ptr += hash;
     brunch.head = hash_ptr->prev;
-    return find_first(&brunch, key);;
+    return find_first(&brunch, key);
 }
 
-struct Node * find_last( List *list, int key) // Поиск по ключу с конца списка
+void pop( List *list, int key ) // Удаление элемента списка по ключу с начала списка
 {
-    Node * temp = list->tail;
-    while ( temp != NULL )
+    Node * deleted, * previous, * following;
+    deleted = find_first(list, key);
+    if (deleted != NULL)
     {
-            if (temp->couple.key == key)
-                    break;
-            temp = temp->prev;
+        previous = deleted->prev;
+        following = deleted->next;
+        if (previous != NULL)
+            previous->next = following;
+        if (following != NULL)
+            following->prev = previous;
+        delete deleted; // Освобождаем память
+        cout<<"Success! ...something by key "<< key <<" DELETED"<<endl;
     }
-    return temp;
+    else
+        cout<< "Can't delete: Node is NULL. By key:" << key <<endl;
+}
+
+void pop_by_hash( Node * table, int key ) // Удаление в хеш-таблице
+{
+    Node * hash_ptr = table;
+    List brunch;
+    int hash;
+    hash = hash_function(key);
+    hash_ptr += hash;
+    brunch.head = hash_ptr->prev;
+    pop(&brunch, key);
+}
+
+void add_by_hash ( Node * table, Couple couple ) // Добавление пары ключ-значение в хеш-таблицу
+{
+    Node * hash_ptr = table;
+    Node * temp_brunch, * brunch_tail;
+    List brunch;
+    int hash;
+    hash = hash_function(couple.key);
+    hash_ptr += hash;
+    brunch.head = hash_ptr->prev;
+    
+    // Ищем конец ветки
+    temp_brunch = brunch.head;
+    brunch_tail = temp_brunch; // Если ветка пустая (head is NULL), хвост - NULL
+    while(temp_brunch != NULL)
+    {
+        brunch_tail = temp_brunch; // На последнем шаге temp_brunch будет NULL. Хвост - элемент перед NULL
+        temp_brunch = temp_brunch->next;
+    }
+    brunch.tail = brunch_tail;
+    
+    add(&brunch, couple);
+    cout<<"Success! ("<< couple.key <<" "<< couple.value <<") ADDED in the hash table"<<endl;
 }
 
 void fill_table( Node * table, List * list )
@@ -164,9 +217,13 @@ void fill_table( Node * table, List * list )
                 {
                     temp_brunch = temp_table->prev;
                     if (temp_brunch == NULL)
-                        temp_table->prev = temp_list; 
+                        temp_table->prev = temp_list;
                     else
+                    {   
+                        while (temp_brunch->prev != NULL)
+                            temp_brunch = temp_brunch->prev;
                         temp_brunch->prev = temp_list;
+                    }
                 }
                 temp_table = temp_table->next;
             }
@@ -200,41 +257,55 @@ void fill_table( Node * table, List * list )
          */
 }
 
+void print_value(Node * node) // Печать значения элемента
+{
+    if (node != NULL)
+        cout << "Value of node: " << node->couple.value <<". By key: "<< node->couple.key <<endl;
+    else
+        cout << "Can't print a value: Node is NULL"<<endl;
+}
+
 int main()
 {
-        int key, value;
-        struct List list;
-        struct Node table[12];
-        struct Node * found;
-        struct Couple one = {1,1};
-        
-        // Заполнение списка 20 случайными значениями key и value от 0 до 100
-        for (int i = 0; i < 20; i++)
-        {
-                key = rand() % 100;
-                value = rand() % 100;
-                struct Couple couple = {key, value};
-                add(&list, couple);
-        }
-        print_list(&list);
-        hash_function(&list);
-        
-        // Заполнение массива возможными хешами (столбец хешей)
-        for (int i = 0; i <= 9; i++)
-        {
-                add(table,i);
-        }
-        // Заполнение хеш-таблицы по элементам, представленным списком
-        fill_table(table, &list);
-        
-        print_table(table);
-        
-        // Поиск в хеш-таблице
-        found = find_by_hash(table, 44);
-        if (found != NULL)
-            cout << "Value by key: " << found->couple.value;
-        else
-            cout << "Key doesn't exist"<<endl;
-        
-        return 0;
+    int key, value;
+    struct List list;
+    struct Node table[12];
+    struct Node * found;
+    struct Couple test = {1,1};
+
+    // Заполнение списка 20 случайными значениями key и value от 0 до 100
+    for (int i = 0; i < 20; i++)
+    {
+            key = rand() % 100;
+            value = rand() % 100;
+            struct Couple couple = {key, value};
+            add(&list, couple);
+    }
+    print_list(&list);
+    hash_function(&list);
+
+    // Заполнение массива возможными хешами (столбец хешей)
+    for (int i = 0; i <= 9; i++)
+    {
+            add(table,i);
+    }
+    // Заполнение хеш-таблицы по элементам, представленным списком
+    fill_table(table, &list);
+    
+    //Добавление тестового элемента
+    add_by_hash(table, test);
+    print_table(table);
+
+    // Поиск в хеш-таблице
+    found = find_by_hash(table, test.key);
+    print_value(found);
+    // Удаление найденного
+    pop_by_hash(table, found->couple.key);
+    // Повторный поиск уже удаленного элемента
+    found = find_by_hash(table, test.key);
+    print_value(found);
+    // Удаление удаленного
+    pop_by_hash(table, test.key);
+    
+    return 0;
 }
